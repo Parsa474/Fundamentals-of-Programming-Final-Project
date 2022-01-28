@@ -1,3 +1,5 @@
+//linked list functions:
+
 struct info{
 	int character;
 	int random;
@@ -152,6 +154,8 @@ void linked_list_cpy(struct node **list2, struct node * list1){
 	}
 	return;
 }
+
+//game functions:
 
 enum blocks_contents{
 	SH,//0
@@ -1139,6 +1143,20 @@ int move(struct coordinates c, struct block blocks[9][13], bool must, int *n, in
 							*n-=1;
 							flag=0;
 						} else{
+							if(detective && blocks[next.y][next.x].identifier<light){
+								printf("do you want to capture this character?  0.no  1.yes\n");
+								scanf(" %d", &choice);
+								checker(0, 1, &choice);
+								if(choice){
+									if(blocks[next.y][next.x].identifier==Jack){
+										printf("Detective won! Jack was captured");
+										exit(EXIT_SUCCESS);
+									}else{
+										printf("Jack won! Detective captured a poor innocent!");
+										exit(EXIT_SUCCESS);
+									}
+								}
+							}
 							if(*n - *counter==1){
 								printf("You will run out of moves and are not allowed to stay there, try again!\n");
 								continue;
@@ -1264,4 +1282,153 @@ struct coordinates find_numbered_light(int no, struct block blocks[9][13]){
 	c.y=-1;
 	printf("cound not find light numbered %d\n", no);
 	return c;
+}
+
+void swap_block_abilities(int character, int x1, int y1, int x2, int y2, struct block blocks[9][13]){
+	int temp;
+	switch(character){
+		case JS:
+			blocks[y1][x1].on=0;
+			blocks[y2][x2].on=1;
+			temp=blocks[y1][x1].num;
+			blocks[y1][x1].num=blocks[y2][x2].num;
+			blocks[y2][x2].num=temp;
+		break;
+		case IL:
+			blocks[y1][x1].blocked=0;
+			blocks[y2][x2].blocked=1;
+		break;
+		case JB:
+			blocks[y1][x1].blocked=0;
+			blocks[y2][x2].blocked=1;
+		break;
+		default:
+			printf("swap_block_abilities bug\n");
+		break;
+	}
+	return;
+}
+
+void ability(int character, struct block blocks[9][13]){
+	int x1, y1, x2, y2, flag=1;
+	while(flag)
+	switch(character){
+		case JS:
+			printf("Enter the x,y of the lit gaslight you want to swap: ");
+			scanf(" %d %d", &x1, &y1);
+			checker(1, 13, &x1);
+			checker(1, 9, &y1);
+			if(blocks[y1-1][x1-1].identifier==light && blocks[y1-1][x1-1].on){
+				printf("Enter the x,y of the unlit gaslight you want to swap with: ");
+				scanf(" %d %d", &x2, &y2);
+				checker(1, 13, &x2);
+				checker(1, 9, &y2);
+				if(blocks[y2-1][x2-1].identifier==light && blocks[y2-1][x2-1].on==0){
+					swap_block_abilities(JS, x1-1, y1-1, x2-1, y2-1, blocks);
+					flag=0;
+				} else{
+					("Invalid input! try again\n");
+				}
+			} else {
+				printf("Invalid input! try again\n");
+			}
+		break;
+		case IL:
+			printf("Enter the x,y of the cordon you want to move: ");
+			scanf(" %d %d", &x1, &y1);
+			checker(1, 13, &x1);
+			checker(1, 9, &y1);
+			if(blocks[y1-1][x1-1].identifier==esc && blocks[y1-1][x1-1].blocked){
+				printf("Enter the x,y of the exit you want to block: ");
+				scanf(" %d %d", &x2, &y2);
+				checker(1, 13, &x2);
+				checker(1, 9, &y2);
+				if(blocks[y2-1][x2-1].identifier==esc && blocks[y2-1][x2-1].blocked==0){
+					swap_block_abilities(IL, x1-1, y1-1, x2-1, y2-1, blocks);
+					flag=0;
+				} else{
+					("Invalid input! try again\n");
+				}
+			} else {
+				printf("Invalid input! try again\n");
+			}
+		break;
+		case JB:
+			printf("Enter the x,y of the manhole you want to open: ");
+			scanf(" %d %d", &x1, &y1);
+			checker(1, 13, &x1);
+			checker(1, 9, &y1);
+			if(blocks[y1-1][x1-1].well && blocks[y1-1][x1-1].blocked){
+				printf("Enter the x,y of the manhole you want to close: ");
+				scanf(" %d %d", &x2, &y2);
+				checker(1, 13, &x2);
+				checker(1, 9, &y2);
+				if(blocks[y2-1][x2-1].well && blocks[y2-1][x2-1].blocked==0){
+					swap_block_abilities(IL, x1-1, y1-1, x2-1, y2-1, blocks);
+					flag=0;
+				} else{
+					("Invalid input! try again\n");
+				}
+			} else {
+				printf("Invalid input! try again\n");
+			}
+		break;
+	}
+	update_screen(blocks);
+	return;
+}
+void play(int character, struct block blocks[9][13], int *n, int *counter, int Jack, int detective, struct node * innocent_list){
+	struct coordinates c = find_character(character, blocks);
+	int innocent_character, choice;
+	switch(character){
+		case SH:
+			move_character(character, c, blocks, n, counter, Jack, detective);
+			printf("Ability: draw a card from the innocents' list:\n");
+			innocent_character=get(innocent_list, 0);
+			printf("non_playing player should look away here(press any key)\n");
+			getch();
+			print_character_name(innocent_character);
+			printf(" is innocent");
+		break;
+		case JS:
+			printf("Do you want to use your ability 1.now 2.after movement ?\n");
+			scanf(" %d", &choice);
+			checker(1, 2, &choice);
+			if(choice==1){
+				ability(JS, blocks);
+				move_character(character, c, blocks, n, counter, Jack, detective);
+			}else{
+				move_character(character, c, blocks, n, counter, Jack, detective);
+				ability(JS, blocks);
+			}
+		break;
+		case IL:
+			printf("Do you want to use your ability 1.now 2.after movement ?\n");
+			scanf(" %d", &choice);
+			checker(1, 2, &choice);
+			if(choice==1){
+				ability(IL, blocks);
+				move_character(character, c, blocks, n, counter, Jack, detective);
+			}else{
+				move_character(character, c, blocks, n, counter, Jack, detective);
+				ability(IL, blocks);
+			}
+		break;
+		case JB:
+			printf("Do you want to use your ability 1.now 2.after movement ?\n");
+			scanf(" %d", &choice);
+			checker(1, 2, &choice);
+			if(choice==1){
+				ability(JB, blocks);
+				move_character(character, c, blocks, n, counter, Jack, detective);
+			}else{
+				move_character(character, c, blocks, n, counter, Jack, detective);
+				ability(JB, blocks);
+			}
+		break;
+		case JW:
+			
+		break;
+	}
+	return;
 }

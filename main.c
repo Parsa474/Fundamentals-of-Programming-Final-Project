@@ -4,7 +4,6 @@
 #include <stdbool.h>
 #include <time.h>
 #include "Mr.Jack.h"
-#include "linked_list.h"
 #define debug 0
 
 int main(){
@@ -73,6 +72,12 @@ int main(){
 	linked_list_cpy(&innocent_list, list);
 	Jack = get(innocent_list, 0);
 	remove_node(&innocent_list, 0);
+	int dbug=1;
+	if(dbug){
+		n=3;
+		play(JB, blocks, &n, &counter, Jack, 0, innocent_list);
+		return 0;
+	}
 	switch(Jack){
 		case SH:
 			printf("Mr.Jack is Sherlock Holmes(SH)\n");
@@ -240,5 +245,6 @@ int main(){
 	}
 	printf("Time is up! Mr.Jack wins!\n");
 	if(innocent_list!=NULL) free(innocent_list);
+	free(list);
 	return 0;
 }

@@ -115,7 +115,7 @@ void remove_node(struct node **head, int index){
 		prev = temp;
 		temp = temp->next;
 		if(temp == NULL){
-			//printf("Wrong index for remove_nod\n");
+			printf("Wrong index for remove_nod\n");
 			return;
 		}
 	}
@@ -385,6 +385,7 @@ int read_locations(char name[], int identifier, struct block blocks[9][13]){
 
 void update_screen(struct block blocks[9][13]){
 	system("cls");
+	printf("\n");
 	print_map(blocks);
 }
 
@@ -392,7 +393,6 @@ void update_screen(struct block blocks[9][13]){
 
 struct coordinates find_character(int identifier, struct block blocks[9][13]){
 	int i, j;
-	bool b;
 	struct coordinates c;
 	for(i=0; i<9; i++){
 		for(j=0; j<13; j++){
@@ -531,6 +531,7 @@ void print_character_name(int identifier){
 }
 
 void swap_character_info(struct block *b1, struct block *b2){
+	
 	struct character_info temp;
 	
 	temp.identifier=b1->identifier;
@@ -547,6 +548,7 @@ void swap_character_info(struct block *b1, struct block *b2){
 	b2->sus=temp.sus;
 	b2->visible=temp.visible;
 	b2->direction=temp.direction;
+	
 	return;
 }
 
@@ -576,83 +578,380 @@ int print_available_moves(struct availability av, int x, int y, bool must, struc
 		printf("%d:)%c   ", up_left, 24);
 	}
 	if(!must) printf("5:I'm done");
+	if(!av.u && !av.ur && !av.dr && !av.d && !av.dl && !av.ul && en==0){
+		printf("Ops, this caracter cannot move, welp\n");
+		return -1;
+	}
 	return en;
 }
 
-int move(int character, struct block blocks[9][13], bool must){
-	struct coordinates c = find_character(character, blocks);
+
+int move(struct coordinates c, struct block blocks[9][13], bool must, int *n, int *counter){
+	//printf("n=%d counter=%d\n", *n, *counter);
+	if(*counter<*n){
 	struct availability av = check_around(c.x, c.y, blocks);
-	int choice, flag=1, en;
+	int choice, flag=1, x, y, character, en;
+	if(*counter==0){
+		character=blocks[c.y][c.x].identifier;
+	} else{
+		character=blocks[c.y][c.x].temp.identifier;
+	}
 	bool r = c.x % 2;
-	int x, y;
+	struct coordinates next;
+	struct character_info info;
 	en = print_available_moves(av, c.x, c.y, must, blocks);
+	if(en==-1){
+		printf("You ran out of moves and cannot remain on this block, these moves are not acceptable!\n");
+		return -1;
+	}
 	while(flag){
-		printf("\nWhat's your move? Enter the number of the move you want to make: ");
+		if(*counter==0) printf("\nWhat's your move? Enter the number of the move you want to make: ");
+		else printf("You can't remain there, type in your next move: ");
 		scanf(" %d", &choice);
 		switch(choice){
 			case up:
-				if(av.u){
-					swap_character_info(&blocks[c.y][c.x], &blocks[c.y - 1][c.x]);
-					flag=0;
+				if(av.u){		//[c.y - 1][c.x]
+					next.x=c.x;
+					next.y=c.y - 1;
+					if(blocks[next.y][next.x].identifier==street){
+						if(*counter==0){
+							swap_character_info(&blocks[c.y][c.x], &blocks[next.y][next.x]);
+						}
+						else{
+							blocks[next.y][next.x].identifier=blocks[c.y][c.x].temp.identifier;
+							blocks[next.y][next.x].sus=blocks[c.y][c.x].temp.sus;
+							blocks[next.y][next.x].visible=blocks[c.y][c.x].temp.visible;
+							blocks[next.y][next.x].direction=blocks[c.y][c.x].temp.direction;
+						}
+						*n-=1;
+						flag=0;
+					}else{
+						if(*n - *counter==1){
+							printf("You will run out of moves and are not allowed to stay there, try again!\n");
+							continue;
+						}
+						if(*counter==0){
+							info.identifier=blocks[c.y][c.x].identifier;
+							info.sus=blocks[c.y][c.x].sus;
+							info.visible=blocks[c.y][c.x].visible;
+							info.direction=blocks[c.y][c.x].direction;
+						}else info=blocks[c.y][c.x].temp;
+						*counter+=1;
+						blocks[next.y][next.x].temp=info;
+						if(move(next, blocks, 1, n, counter)!=-1){
+							*counter-=1;
+							*n-=1;
+							flag=0;
+							if(*counter==0){
+								blocks[c.y][c.x].identifier=street;
+								blocks[c.y][c.x].sus=0;
+								blocks[c.y][c.x].visible=0;
+								blocks[c.y][c.x].direction=0;
+							}
+						}else{
+							*counter-=1;
+							continue;
+						}
+					}
 				} else{
 					printf("you can't make this move!\n");
 				}
 			break;
 			case up_right:
-				if(av.ur){
-					swap_character_info(&blocks[c.y][c.x], &blocks[c.y - r][c.x + 1]);
-					flag=0;
+				if(av.ur){		//[c.y - r][c.x + 1]
+					next.x=c.x + 1;
+					next.y=c.y - r;
+					if(blocks[next.y][next.x].identifier==street){
+						if(*counter==0){
+							swap_character_info(&blocks[c.y][c.x], &blocks[next.y][next.x]);
+						}
+						else{
+							blocks[next.y][next.x].identifier=blocks[c.y][c.x].temp.identifier;
+							blocks[next.y][next.x].sus=blocks[c.y][c.x].temp.sus;
+							blocks[next.y][next.x].visible=blocks[c.y][c.x].temp.visible;
+							blocks[next.y][next.x].direction=blocks[c.y][c.x].temp.direction;
+						}
+						*n-=1;
+						flag=0;
+					}else{
+						if(*n - *counter==1){
+							printf("You will run out of moves and are not allowed to stay there, try again!\n");
+							continue;
+						}
+						if(*counter==0){
+							info.identifier=blocks[c.y][c.x].identifier;
+							info.sus=blocks[c.y][c.x].sus;
+							info.visible=blocks[c.y][c.x].visible;
+							info.direction=blocks[c.y][c.x].direction;
+						}else info=blocks[c.y][c.x].temp;
+						*counter+=1;
+						blocks[next.y][next.x].temp=info;
+						if(move(next, blocks, 1, n, counter)!=-1){
+							*counter-=1;
+							*n-=1;
+							flag=0;
+							if(*counter==0){
+								blocks[c.y][c.x].identifier=street;
+								blocks[c.y][c.x].sus=0;
+								blocks[c.y][c.x].visible=0;
+								blocks[c.y][c.x].direction=0;
+							}
+						}else{
+							*counter-=1;
+							continue;
+						}
+					}
 				} else{
 					printf("you can't make this move!\n");
 				}
 			break;
 			case down_right:
-				if(av.dr){
-					swap_character_info(&blocks[c.y][c.x], &blocks[c.y + !r][c.x + 1]);
-					flag=0;
+				if(av.dr){		//[c.y + !r][c.x + 1]
+					next.x=c.x + 1;
+					next.y=c.y + !r;
+					if(blocks[next.y][next.x].identifier==street){
+						if(*counter==0){
+							swap_character_info(&blocks[c.y][c.x], &blocks[next.y][next.x]);
+						}
+						else{
+							blocks[next.y][next.x].identifier=blocks[c.y][c.x].temp.identifier;
+							blocks[next.y][next.x].sus=blocks[c.y][c.x].temp.sus;
+							blocks[next.y][next.x].visible=blocks[c.y][c.x].temp.visible;
+							blocks[next.y][next.x].direction=blocks[c.y][c.x].temp.direction;
+						}
+						*n-=1;
+						flag=0;
+					}else{
+						if(*n - *counter==1){
+							printf("You will run out of moves and are not allowed to stay there, try again!\n");
+							continue;
+						}
+						if(*counter==0){
+							info.identifier=blocks[c.y][c.x].identifier;
+							info.sus=blocks[c.y][c.x].sus;
+							info.visible=blocks[c.y][c.x].visible;
+							info.direction=blocks[c.y][c.x].direction;
+						}else info=blocks[c.y][c.x].temp;
+						*counter+=1;
+						blocks[next.y][next.x].temp=info;
+						if(move(next, blocks, 1, n, counter)!=-1){
+							*counter-=1;
+							*n-=1;
+							flag=0;
+							if(*counter==0){
+								blocks[c.y][c.x].identifier=street;
+								blocks[c.y][c.x].sus=0;
+								blocks[c.y][c.x].visible=0;
+								blocks[c.y][c.x].direction=0;
+							}
+						}else{
+							*counter-=1;
+							continue;
+						}
+					}
 				} else{
 					printf("you can't make this move!\n");
 				}
 			break;
 			case down:
-				if(av.d){
-					swap_character_info(&blocks[c.y][c.x], &blocks[c.y + 1][c.x]);
-					flag=0;
+				if(av.d){		//[c.y + 1][c.x]
+					next.x=c.x;
+					next.y=c.y + 1;
+					if(blocks[next.y][next.x].identifier==street){
+						if(*counter==0){
+							swap_character_info(&blocks[c.y][c.x], &blocks[next.y][next.x]);
+						}
+						else{
+							blocks[next.y][next.x].identifier=blocks[c.y][c.x].temp.identifier;
+							blocks[next.y][next.x].sus=blocks[c.y][c.x].temp.sus;
+							blocks[next.y][next.x].visible=blocks[c.y][c.x].temp.visible;
+							blocks[next.y][next.x].direction=blocks[c.y][c.x].temp.direction;
+						}
+						*n-=1;
+						flag=0;
+					}else{
+						if(*n - *counter==1){
+							printf("You will run out of moves and are not allowed to stay there, try again!\n");
+							continue;
+						}
+						if(*counter==0){
+							info.identifier=blocks[c.y][c.x].identifier;
+							info.sus=blocks[c.y][c.x].sus;
+							info.visible=blocks[c.y][c.x].visible;
+							info.direction=blocks[c.y][c.x].direction;
+						}else info=blocks[c.y][c.x].temp;
+						*counter+=1;
+						blocks[next.y][next.x].temp=info;
+						if(move(next, blocks, 1, n, counter)!=-1){
+							*counter-=1;
+							*n-=1;
+							flag=0;
+							if(*counter==0){
+								blocks[c.y][c.x].identifier=street;
+								blocks[c.y][c.x].sus=0;
+								blocks[c.y][c.x].visible=0;
+								blocks[c.y][c.x].direction=0;
+							}
+						}else{
+							*counter-=1;
+							continue;
+						}
+					}
 				} else{
 					printf("you can't make this move!\n");
 				}
 			break;
 			case down_left:
-				if(av.dl){
-					swap_character_info(&blocks[c.y][c.x], &blocks[c.y + !r][c.x - 1]);
-					flag=0;
+				if(av.dl){		//[c.y + !r][c.x - 1]
+					next.x=c.x - 1;
+					next.y=c.y + !r;
+					if(blocks[next.y][next.x].identifier==street){
+						if(*counter==0){
+							swap_character_info(&blocks[c.y][c.x], &blocks[next.y][next.x]);
+						}
+						else{
+							blocks[next.y][next.x].identifier=blocks[c.y][c.x].temp.identifier;
+							blocks[next.y][next.x].sus=blocks[c.y][c.x].temp.sus;
+							blocks[next.y][next.x].visible=blocks[c.y][c.x].temp.visible;
+							blocks[next.y][next.x].direction=blocks[c.y][c.x].temp.direction;
+						}
+						*n-=1;
+						flag=0;
+					}else{
+						if(*n - *counter==1){
+							printf("You will run out of moves and are not allowed to stay there, try again!\n");
+							continue;
+						}
+						if(*counter==0){
+							info.identifier=blocks[c.y][c.x].identifier;
+							info.sus=blocks[c.y][c.x].sus;
+							info.visible=blocks[c.y][c.x].visible;
+							info.direction=blocks[c.y][c.x].direction;
+						}else info=blocks[c.y][c.x].temp;
+						*counter+=1;
+						blocks[next.y][next.x].temp=info;
+						if(move(next, blocks, 1, n, counter)!=-1){
+							*counter-=1;
+							*n-=1;
+							flag=0;
+							if(*counter==0){
+								blocks[c.y][c.x].identifier=street;
+								blocks[c.y][c.x].sus=0;
+								blocks[c.y][c.x].visible=0;
+								blocks[c.y][c.x].direction=0;
+							}
+						}else{
+							*counter-=1;
+							continue;
+						}
+					}
 				} else{
 					printf("you can't make this move!\n");
 				}
 			break;
 			case up_left:
-				if(av.ul){
-					swap_character_info(&blocks[c.y][c.x], &blocks[c.y - r][c.x - 1]);
-					flag=0;
+				if(av.ul){		//[c.y - r][c.x - 1]
+					next.x=c.x - 1;
+					next.y=c.y - r;
+					if(blocks[next.y][next.x].identifier==street){
+						if(*counter==0){
+							swap_character_info(&blocks[c.y][c.x], &blocks[next.y][next.x]);
+						}
+						else{
+							blocks[next.y][next.x].identifier=blocks[c.y][c.x].temp.identifier;
+							blocks[next.y][next.x].sus=blocks[c.y][c.x].temp.sus;
+							blocks[next.y][next.x].visible=blocks[c.y][c.x].temp.visible;
+							blocks[next.y][next.x].direction=blocks[c.y][c.x].temp.direction;
+						}
+						*n-=1;
+						flag=0;
+					}else{
+						if(*n - *counter==1){
+							printf("You will run out of moves and are not allowed to stay there, try again!\n");
+							continue;
+						}
+						if(*counter==0){
+							info.identifier=blocks[c.y][c.x].identifier;
+							info.sus=blocks[c.y][c.x].sus;
+							info.visible=blocks[c.y][c.x].visible;
+							info.direction=blocks[c.y][c.x].direction;
+						}else info=blocks[c.y][c.x].temp;
+						*counter+=1;
+						blocks[next.y][next.x].temp=info;
+						if(move(next, blocks, 1, n, counter)!=-1){
+							*counter-=1;
+							*n-=1;
+							flag=0;
+							if(*counter==0){
+								blocks[c.y][c.x].identifier=street;
+								blocks[c.y][c.x].sus=0;
+								blocks[c.y][c.x].visible=0;
+								blocks[c.y][c.x].direction=0;
+							}
+						}else{
+							*counter-=1;
+							continue;
+						}
+					}
 				} else{
 					printf("you can't make this move!\n");
 				}
 			break;
 			case 0:
-				if(en){
+				if(en==1){
 					do{
 						printf("enter the x,y of the well you want to go to: ");
 						scanf(" %d %d", &x, &y);
-						if(!blocks[y-1][x-1].well) printf("Invalid coordinates, try again: ");
-						else if(blocks[y-1][x-1].blocked) printf("The destination well is blocked! try again: ");
-						else{
-							swap_character_info(&blocks[c.y][c.x], &blocks[y-1][x-1]);
+						next.x=x-1;
+						next.y=y-1;
+						if(!blocks[next.y][next.x].well) printf("Invalid coordinates, try again: ");
+						else if(blocks[next.y][next.x].blocked) printf("The destination well is blocked! try again: ");
+						else if(blocks[next.y][next.x].identifier==street){
+							if(*counter==0){
+								swap_character_info(&blocks[c.y][c.x], &blocks[next.y][next.x]);
+							} else{
+								blocks[next.y][next.x].identifier=blocks[c.y][c.x].temp.identifier;
+								blocks[next.y][next.x].sus=blocks[c.y][c.x].temp.sus;
+								blocks[next.y][next.x].visible=blocks[c.y][c.x].temp.visible;
+								blocks[next.y][next.x].direction=blocks[c.y][c.x].temp.direction;
+							}
+							*n-=1;
 							flag=0;
+						} else{
+							if(*n - *counter==1){
+								printf("You will run out of moves and are not allowed to stay there, try again!\n");
+								continue;
+							}
+							if(*counter==0){
+								info.identifier=blocks[c.y][c.x].identifier;
+								info.sus=blocks[c.y][c.x].sus;
+								info.visible=blocks[c.y][c.x].visible;
+								info.direction=blocks[c.y][c.x].direction;
+							}else info=blocks[c.y][c.x].temp;
+							*counter+=1;
+							blocks[next.y][next.x].temp=info;
+							if(move(next, blocks, 1, n, counter)!=-1){
+								*counter-=1;
+								*n-=1;
+								flag=0;
+								if(*counter==0){
+									blocks[c.y][c.x].identifier=street;
+									blocks[c.y][c.x].sus=0;
+									blocks[c.y][c.x].visible=0;
+									blocks[c.y][c.x].direction=0;
+								}
+							}else{
+								*counter-=1;
+								continue;
+						}	
 						}
 					} while(flag);
 				} else printf("This block does not have a well!");
 			break;
-			case 5: if(!must) return 0;
+			case 5: if(!must){
+						*n=0;
+						return 0;
+					}
 					else printf("You must make a move!\n");
 			break;
 			default:
@@ -665,4 +964,83 @@ int move(int character, struct block blocks[9][13], bool must){
 	print_character_name(character);
 	printf("\n");
 	return 1;
+	}else{
+		printf("You ran out of moves and cannot remain on this block, these moves are not acceptable!\n");
+		return -1;
+	}
+}
+
+void move_character(int character, struct coordinates initial, struct block blocks[9][13], int *n, int *counter){
+	struct coordinates c;
+	int initial_n=*n;
+	c=initial;
+	while(initial.x==find_character(character, blocks).x && initial.y==find_character(character, blocks).y){
+		move(c, blocks, 1, n, counter);
+		while(*n>0){
+			c=find_character(character, blocks);
+			move(c, blocks, 0, n, counter);
+		}
+		update_screen(blocks);
+		if(initial.x==find_character(character, blocks).x && initial.y==find_character(character, blocks).y){
+			printf("bruh, you HAVE TO move :)\n");
+			*n=initial_n;
+		}
+	}
+	return;
+}
+
+bool visible_by_light(int character, struct block blocks[9][13]){
+	struct coordinates c = find_character(character, blocks);
+	bool visible=0;
+	bool r = c.x % 2; 
+	if(c.y>0) visible+=(blocks[c.y-1][c.x].identifier==light && blocks[c.y-1][c.x].on);
+	if(c.y<8) visible+=(blocks[c.y+1][c.x].identifier==light && blocks[c.y+1][c.x].on);
+	if(c.y-r>=0 && c.x>0) visible+=(blocks[c.y-r][c.x-1].identifier==light && blocks[c.y-r][c.x-1].on);
+	if(c.y+!r<=9 && c.x>0) visible+=(blocks[c.y+!r][c.x-1].identifier==light && blocks[c.y+!r][c.x-1].on);
+	if(c.y-r>=0 && c.x<12) visible+=(blocks[c.y-r][c.x+1].identifier==light && blocks[c.y-r][c.x+1].on);
+	if(c.y+!r<=9 && c.x<12) visible+=(blocks[c.y+!r][c.x+1].identifier==light && blocks[c.y+!r][c.x+1].on);
+	return visible;
+}
+
+bool visible_by_person(int character, struct block blocks[9][13]){
+	struct coordinates c = find_character(character, blocks);
+	bool visible=0;
+	bool r = c.x % 2; 
+	if(c.y>0) visible+=(blocks[c.y-1][c.x].identifier<8);
+	if(c.y<8) visible+=(blocks[c.y+1][c.x].identifier<8);
+	if(c.y-r>=0 && c.x>0) visible+=(blocks[c.y-r][c.x-1].identifier<8);
+	if(c.y+!r<=9 && c.x>0) visible+=(blocks[c.y+!r][c.x-1].identifier<8);
+	if(c.y-r>=0 && c.x<12) visible+=(blocks[c.y-r][c.x+1].identifier<8);
+	if(c.y+!r<=9 && c.x<12) visible+=(blocks[c.y+!r][c.x+1].identifier<8);
+	return visible;
+}
+
+void update_visibility(struct block blocks[9][13]){
+	int i;
+	struct coordinates c;
+	for(i=0; i<8; i++){
+		if(visible_by_light(i, blocks) || visible_by_person(i, blocks)){
+			c=find_character(i, blocks);
+			blocks[c.y][c.x].visible=1;
+		}
+	}
+	return;
+}
+
+struct coordinates find_numbered_light(int no, struct block blocks[9][13]){
+	int i, j;
+	struct coordinates c;
+	for(i=0; i<9; i++){
+		for(j=0; j<13; j++){
+			if(blocks[i][j].num==no){
+				c.x=j;
+				c.y=i;
+				return c;
+			}
+		}
+	}
+	c.x=-1;
+	c.y=-1;
+	printf("cound not find light numbered %d\n", no);
+	return c;
 }

@@ -409,7 +409,16 @@ struct coordinates find_character(int identifier, struct block blocks[9][13]){
 	return c;
 }
 
-struct availability check_around(int x, int y, struct block blocks[9][13]){
+bool MS_check(int i, int character){
+	bool output;
+	if(character==MS){
+		output = (i!=extra);
+	}else{
+		output = (i<light);
+	}
+	return output;
+}
+struct availability check_around(int x, int y, struct block blocks[9][13], int character){
 	struct availability av;
 	av.d=0; av.dl=0; av.dr=0; av.u=0; av.ul=0; av.ur=0;
 	int i;
@@ -417,8 +426,7 @@ struct availability check_around(int x, int y, struct block blocks[9][13]){
 	b = (y!=0);													//check if we can go up
 	if(b){
 		i = blocks[y-1][x].identifier;
-		b = (i<light);
-		if(b){
+		if(MS_check(i, character)){
 			if(blocks[y-1][x].identifier!=esc){
 				av.u=1;
 			} else if(blocks[y-1][x].blocked==0){
@@ -429,8 +437,7 @@ struct availability check_around(int x, int y, struct block blocks[9][13]){
 	b = (y!=8);													//check if we can go down
 	if(b){
 		i = blocks[y+1][x].identifier;
-		b = (i<light);
-		if(b){
+		if(MS_check(i, character)){
 			if(blocks[y+1][x].identifier!=esc){
 				av.d=1;
 			} else if(blocks[y+1][x].blocked==0){
@@ -441,8 +448,7 @@ struct availability check_around(int x, int y, struct block blocks[9][13]){
 	b = (x!=12 && y-r>=0 && y-r<9);								//check if we can go up_right
 	if(b){
 		i = blocks[y-r][x+1].identifier;
-		b = (i<light);
-		if(b){
+		if(MS_check(i, character)){
 			if(blocks[y-r][x+1].identifier!=esc){
 				av.ur=1;
 			} else if(blocks[y-r][x+1].blocked==0){
@@ -453,8 +459,7 @@ struct availability check_around(int x, int y, struct block blocks[9][13]){
 	b = (x!=0 && y-r>=0 && y-r<9);								//check if we can go up_left
 	if(b){
 		i = blocks[y-r][x-1].identifier;
-		b = (i<light);
-		if(b){
+		if(MS_check(i, character)){
 			if(blocks[y-r][x-1].identifier!=esc){
 				av.ul=1;
 			} else if(blocks[y-r][x-1].blocked==0){
@@ -465,8 +470,7 @@ struct availability check_around(int x, int y, struct block blocks[9][13]){
 	b = (x!=0 && y+!r>=0 && y+!r<9);							//check if we can go down_left
 	if(b){
 		i = blocks[y+!r][x-1].identifier;
-		b = (i<light);
-		if(b){
+		if(MS_check(i, character)){
 			if(blocks[y+!r][x-1].identifier!=esc){
 				av.dl=1;
 			} else if(blocks[y+!r][x-1].blocked==0){
@@ -477,8 +481,7 @@ struct availability check_around(int x, int y, struct block blocks[9][13]){
 	b = (x!=12 && y+!r>=0 && y+!r<9);							//check if we can go down_right
 	if(b){
 		i = blocks[y+!r][x+1].identifier;
-		b = (i<light);
-		if(b){
+		if(MS_check(i, character)){
 			if(blocks[y+!r][x+1].identifier!=esc){
 				av.dr=1;
 			} else if(blocks[y+!r][x+1].blocked==0){
@@ -586,10 +589,12 @@ int print_available_moves(struct availability av, int x, int y, bool must, struc
 }
 
 
-int move(struct coordinates c, struct block blocks[9][13], bool must, int *n, int *counter){
+int move(struct coordinates c, struct block blocks[9][13], bool must, int *n, int *counter, int Jack, int detective){
 	//printf("n=%d counter=%d\n", *n, *counter);
 	if(*counter<*n){
-	struct availability av = check_around(c.x, c.y, blocks);
+	struct availability av;
+	if(*counter==0) av = check_around(c.x, c.y, blocks, blocks[c.y][c.x].identifier);
+	else av = check_around(c.x, c.y, blocks, blocks[c.y][c.x].temp.identifier);
 	int choice, flag=1, x, y, character, en;
 	if(*counter==0){
 		character=blocks[c.y][c.x].identifier;
@@ -626,6 +631,42 @@ int move(struct coordinates c, struct block blocks[9][13], bool must, int *n, in
 						*n-=1;
 						flag=0;
 					}else{
+						if(blocks[next.y][next.x].identifier==esc){
+							switch(*counter){
+								case 0:
+									if(blocks[c.y][c.x].identifier==Jack && blocks[c.y][c.x].visible==0){
+										printf("Mr.Jack wins by escaping the city, try better next time detective :)\n");
+										exit(EXIT_SUCCESS);
+									}else{
+										printf("This character can't escape!\n");
+										return 1;
+									}
+								break;
+								default:
+									if(blocks[c.y][c.x].temp.identifier==Jack && blocks[c.y][c.x].temp.visible==0){
+										printf("Mr.Jack wins by escaping, try better next time detective :)\n");
+										exit(EXIT_SUCCESS);
+									}else{
+										printf("This character can't escape!\n");
+										return 1;
+									}
+								break;	
+							}
+						}
+						if(detective && blocks[next.y][next.x].identifier<light){
+							printf("do you want to capture this character?  0.no  1.yes\n");
+							scanf(" %d", &choice);
+							checker(0, 1, &choice);
+							if(choice){
+								if(blocks[next.y][next.x].identifier==Jack){
+									printf("Detective won! Jack was captured");
+									exit(EXIT_SUCCESS);
+								}else{
+									printf("Jack won! Detective captured a poor innocent!");
+									exit(EXIT_SUCCESS);
+								}
+							}
+						}
 						if(*n - *counter==1){
 							printf("You will run out of moves and are not allowed to stay there, try again!\n");
 							continue;
@@ -638,7 +679,7 @@ int move(struct coordinates c, struct block blocks[9][13], bool must, int *n, in
 						}else info=blocks[c.y][c.x].temp;
 						*counter+=1;
 						blocks[next.y][next.x].temp=info;
-						if(move(next, blocks, 1, n, counter)!=-1){
+						if(move(next, blocks, 1, n, counter, Jack, detective)!=-1){
 							*counter-=1;
 							*n-=1;
 							flag=0;
@@ -674,6 +715,42 @@ int move(struct coordinates c, struct block blocks[9][13], bool must, int *n, in
 						*n-=1;
 						flag=0;
 					}else{
+						if(blocks[next.y][next.x].identifier==esc){
+							switch(*counter){
+								case 0:
+									if(blocks[c.y][c.x].identifier==Jack && blocks[c.y][c.x].visible==0){
+										printf("Mr.Jack wins by escaping the city, try better next time detective :)\n");
+										exit(EXIT_SUCCESS);
+									}else{
+										printf("This character can't escape!\n");
+										return 1;
+									}
+								break;
+								default:
+									if(blocks[c.y][c.x].temp.identifier==Jack && blocks[c.y][c.x].temp.visible==0){
+										printf("Mr.Jack wins by escaping, try better next time detective :)\n");
+										exit(EXIT_SUCCESS);
+									}else{
+										printf("This character can't escape!\n");
+										return 1;
+									}
+								break;	
+							}
+						}
+						if(detective && blocks[next.y][next.x].identifier<light){
+							printf("do you want to capture this character?  0.no  1.yes\n");
+							scanf(" %d", &choice);
+							checker(0, 1, &choice);
+							if(choice){
+								if(blocks[next.y][next.x].identifier==Jack){
+									printf("Detective won! Jack was captured");
+									exit(EXIT_SUCCESS);
+								}else{
+									printf("Jack won! Detective captured a poor innocent!");
+									exit(EXIT_SUCCESS);
+								}
+							}
+						}
 						if(*n - *counter==1){
 							printf("You will run out of moves and are not allowed to stay there, try again!\n");
 							continue;
@@ -686,7 +763,7 @@ int move(struct coordinates c, struct block blocks[9][13], bool must, int *n, in
 						}else info=blocks[c.y][c.x].temp;
 						*counter+=1;
 						blocks[next.y][next.x].temp=info;
-						if(move(next, blocks, 1, n, counter)!=-1){
+						if(move(next, blocks, 1, n, counter, Jack, detective)!=-1){
 							*counter-=1;
 							*n-=1;
 							flag=0;
@@ -722,6 +799,42 @@ int move(struct coordinates c, struct block blocks[9][13], bool must, int *n, in
 						*n-=1;
 						flag=0;
 					}else{
+						if(blocks[next.y][next.x].identifier==esc){
+							switch(*counter){
+								case 0:
+									if(blocks[c.y][c.x].identifier==Jack && blocks[c.y][c.x].visible==0){
+										printf("Mr.Jack wins by escaping the city, try better next time detective :)\n");
+										exit(EXIT_SUCCESS);
+									}else{
+										printf("This character can't escape!\n");
+										return 1;
+									}
+								break;
+								default:
+									if(blocks[c.y][c.x].temp.identifier==Jack && blocks[c.y][c.x].temp.visible==0){
+										printf("Mr.Jack wins by escaping, try better next time detective :)\n");
+										exit(EXIT_SUCCESS);
+									}else{
+										printf("This character can't escape!\n");
+										return 1;
+									}
+								break;	
+							}
+						}
+						if(detective && blocks[next.y][next.x].identifier<light){
+							printf("do you want to capture this character?  0.no  1.yes\n");
+							scanf(" %d", &choice);
+							checker(0, 1, &choice);
+							if(choice){
+								if(blocks[next.y][next.x].identifier==Jack){
+									printf("Detective won! Jack was captured");
+									exit(EXIT_SUCCESS);
+								}else{
+									printf("Jack won! Detective captured a poor innocent!");
+									exit(EXIT_SUCCESS);
+								}
+							}
+						}
 						if(*n - *counter==1){
 							printf("You will run out of moves and are not allowed to stay there, try again!\n");
 							continue;
@@ -734,7 +847,7 @@ int move(struct coordinates c, struct block blocks[9][13], bool must, int *n, in
 						}else info=blocks[c.y][c.x].temp;
 						*counter+=1;
 						blocks[next.y][next.x].temp=info;
-						if(move(next, blocks, 1, n, counter)!=-1){
+						if(move(next, blocks, 1, n, counter, Jack, detective)!=-1){
 							*counter-=1;
 							*n-=1;
 							flag=0;
@@ -770,6 +883,42 @@ int move(struct coordinates c, struct block blocks[9][13], bool must, int *n, in
 						*n-=1;
 						flag=0;
 					}else{
+						if(blocks[next.y][next.x].identifier==esc){
+							switch(*counter){
+								case 0:
+									if(blocks[c.y][c.x].identifier==Jack && blocks[c.y][c.x].visible==0){
+										printf("Mr.Jack wins by escaping the city, try better next time detective :)\n");
+										exit(EXIT_SUCCESS);
+									}else{
+										printf("This character can't escape!\n");
+										return 1;
+									}
+								break;
+								default:
+									if(blocks[c.y][c.x].temp.identifier==Jack && blocks[c.y][c.x].temp.visible==0){
+										printf("Mr.Jack wins by escaping, try better next time detective :)\n");
+										exit(EXIT_SUCCESS);
+									}else{
+										printf("This character can't escape!\n");
+										return 1;
+									}
+								break;	
+							}
+						}
+						if(detective && blocks[next.y][next.x].identifier<light){
+							printf("do you want to capture this character?  0.no  1.yes\n");
+							scanf(" %d", &choice);
+							checker(0, 1, &choice);
+							if(choice){
+								if(blocks[next.y][next.x].identifier==Jack){
+									printf("Detective won! Jack was captured");
+									exit(EXIT_SUCCESS);
+								}else{
+									printf("Jack won! Detective captured a poor innocent!");
+									exit(EXIT_SUCCESS);
+								}
+							}
+						}
 						if(*n - *counter==1){
 							printf("You will run out of moves and are not allowed to stay there, try again!\n");
 							continue;
@@ -782,7 +931,7 @@ int move(struct coordinates c, struct block blocks[9][13], bool must, int *n, in
 						}else info=blocks[c.y][c.x].temp;
 						*counter+=1;
 						blocks[next.y][next.x].temp=info;
-						if(move(next, blocks, 1, n, counter)!=-1){
+						if(move(next, blocks, 1, n, counter, Jack, detective)!=-1){
 							*counter-=1;
 							*n-=1;
 							flag=0;
@@ -818,6 +967,42 @@ int move(struct coordinates c, struct block blocks[9][13], bool must, int *n, in
 						*n-=1;
 						flag=0;
 					}else{
+						if(blocks[next.y][next.x].identifier==esc){
+							switch(*counter){
+								case 0:
+									if(blocks[c.y][c.x].identifier==Jack && blocks[c.y][c.x].visible==0){
+										printf("Mr.Jack wins by escaping the city, try better next time detective :)\n");
+										exit(EXIT_SUCCESS);
+									}else{
+										printf("This character can't escape!\n");
+										return 1;
+									}
+								break;
+								default:
+									if(blocks[c.y][c.x].temp.identifier==Jack && blocks[c.y][c.x].temp.visible==0){
+										printf("Mr.Jack wins by escaping, try better next time detective :)\n");
+										exit(EXIT_SUCCESS);
+									}else{
+										printf("This character can't escape!\n");
+										return 1;
+									}
+								break;	
+							}
+						}
+						if(detective && blocks[next.y][next.x].identifier<light){
+							printf("do you want to capture this character?  0.no  1.yes\n");
+							scanf(" %d", &choice);
+							checker(0, 1, &choice);
+							if(choice){
+								if(blocks[next.y][next.x].identifier==Jack){
+									printf("Detective won! Jack was captured");
+									exit(EXIT_SUCCESS);
+								}else{
+									printf("Jack won! Detective captured a poor innocent!");
+									exit(EXIT_SUCCESS);
+								}
+							}
+						}
 						if(*n - *counter==1){
 							printf("You will run out of moves and are not allowed to stay there, try again!\n");
 							continue;
@@ -830,7 +1015,7 @@ int move(struct coordinates c, struct block blocks[9][13], bool must, int *n, in
 						}else info=blocks[c.y][c.x].temp;
 						*counter+=1;
 						blocks[next.y][next.x].temp=info;
-						if(move(next, blocks, 1, n, counter)!=-1){
+						if(move(next, blocks, 1, n, counter, Jack, detective)!=-1){
 							*counter-=1;
 							*n-=1;
 							flag=0;
@@ -866,6 +1051,42 @@ int move(struct coordinates c, struct block blocks[9][13], bool must, int *n, in
 						*n-=1;
 						flag=0;
 					}else{
+						if(blocks[next.y][next.x].identifier==esc){
+							switch(*counter){
+								case 0:
+									if(blocks[c.y][c.x].identifier==Jack && blocks[c.y][c.x].visible==0){
+										printf("Mr.Jack wins by escaping the city, try better next time detective :)\n");
+										exit(EXIT_SUCCESS);
+									}else{
+										printf("This character can't escape!\n");
+										return 1;
+									}
+								break;
+								default:
+									if(blocks[c.y][c.x].temp.identifier==Jack && blocks[c.y][c.x].temp.visible==0){
+										printf("Mr.Jack wins by escaping, try better next time detective :)\n");
+										exit(EXIT_SUCCESS);
+									}else{
+										printf("This character can't escape!\n");
+										return 1;
+									}
+								break;	
+							}
+						}
+						if(detective && blocks[next.y][next.x].identifier<light){
+							printf("do you want to capture this character?  0.no  1.yes\n");
+							scanf(" %d", &choice);
+							checker(0, 1, &choice);
+							if(choice){
+								if(blocks[next.y][next.x].identifier==Jack){
+									printf("Detective won! Jack was captured");
+									exit(EXIT_SUCCESS);
+								}else{
+									printf("Jack won! Detective captured a poor innocent!");
+									exit(EXIT_SUCCESS);
+								}
+							}
+						}
 						if(*n - *counter==1){
 							printf("You will run out of moves and are not allowed to stay there, try again!\n");
 							continue;
@@ -878,7 +1099,7 @@ int move(struct coordinates c, struct block blocks[9][13], bool must, int *n, in
 						}else info=blocks[c.y][c.x].temp;
 						*counter+=1;
 						blocks[next.y][next.x].temp=info;
-						if(move(next, blocks, 1, n, counter)!=-1){
+						if(move(next, blocks, 1, n, counter, Jack, detective)!=-1){
 							*counter-=1;
 							*n-=1;
 							flag=0;
@@ -930,7 +1151,7 @@ int move(struct coordinates c, struct block blocks[9][13], bool must, int *n, in
 							}else info=blocks[c.y][c.x].temp;
 							*counter+=1;
 							blocks[next.y][next.x].temp=info;
-							if(move(next, blocks, 1, n, counter)!=-1){
+							if(move(next, blocks, 1, n, counter, Jack, detective)!=-1){
 								*counter-=1;
 								*n-=1;
 								flag=0;
@@ -970,15 +1191,15 @@ int move(struct coordinates c, struct block blocks[9][13], bool must, int *n, in
 	}
 }
 
-void move_character(int character, struct coordinates initial, struct block blocks[9][13], int *n, int *counter){
+void move_character(int character, struct coordinates initial, struct block blocks[9][13], int *n, int *counter, int Jack, int detective){
 	struct coordinates c;
 	int initial_n=*n;
 	c=initial;
 	while(initial.x==find_character(character, blocks).x && initial.y==find_character(character, blocks).y){
-		move(c, blocks, 1, n, counter);
+		move(c, blocks, 1, n, counter, Jack, detective);
 		while(*n>0){
 			c=find_character(character, blocks);
-			move(c, blocks, 0, n, counter);
+			move(c, blocks, 0, n, counter, Jack, detective);
 		}
 		update_screen(blocks);
 		if(initial.x==find_character(character, blocks).x && initial.y==find_character(character, blocks).y){

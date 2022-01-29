@@ -640,6 +640,7 @@ int move(struct coordinates c, struct block blocks[9][13], bool must, int *n, in
 								case 0:
 									if(blocks[c.y][c.x].identifier==Jack && blocks[c.y][c.x].visible==0){
 										printf("Mr.Jack wins by escaping the city, try better next time detective :)\n");
+										getch();
 										exit(EXIT_SUCCESS);
 									}else{
 										printf("This character can't escape!\n");
@@ -649,6 +650,7 @@ int move(struct coordinates c, struct block blocks[9][13], bool must, int *n, in
 								default:
 									if(blocks[c.y][c.x].temp.identifier==Jack && blocks[c.y][c.x].temp.visible==0){
 										printf("Mr.Jack wins by escaping, try better next time detective :)\n");
+										getch();
 										exit(EXIT_SUCCESS);
 									}else{
 										printf("This character can't escape!\n");
@@ -664,9 +666,11 @@ int move(struct coordinates c, struct block blocks[9][13], bool must, int *n, in
 							if(choice){
 								if(blocks[next.y][next.x].identifier==Jack){
 									printf("Detective won! Jack was captured");
+									getch();
 									exit(EXIT_SUCCESS);
 								}else{
 									printf("Jack won! Detective captured a poor innocent!");
+									getch();
 									exit(EXIT_SUCCESS);
 								}
 							}
@@ -724,6 +728,7 @@ int move(struct coordinates c, struct block blocks[9][13], bool must, int *n, in
 								case 0:
 									if(blocks[c.y][c.x].identifier==Jack && blocks[c.y][c.x].visible==0){
 										printf("Mr.Jack wins by escaping the city, try better next time detective :)\n");
+										getch();
 										exit(EXIT_SUCCESS);
 									}else{
 										printf("This character can't escape!\n");
@@ -733,6 +738,7 @@ int move(struct coordinates c, struct block blocks[9][13], bool must, int *n, in
 								default:
 									if(blocks[c.y][c.x].temp.identifier==Jack && blocks[c.y][c.x].temp.visible==0){
 										printf("Mr.Jack wins by escaping, try better next time detective :)\n");
+										getch();
 										exit(EXIT_SUCCESS);
 									}else{
 										printf("This character can't escape!\n");
@@ -748,9 +754,11 @@ int move(struct coordinates c, struct block blocks[9][13], bool must, int *n, in
 							if(choice){
 								if(blocks[next.y][next.x].identifier==Jack){
 									printf("Detective won! Jack was captured");
+									getch();
 									exit(EXIT_SUCCESS);
 								}else{
 									printf("Jack won! Detective captured a poor innocent!");
+									getch();
 									exit(EXIT_SUCCESS);
 								}
 							}
@@ -808,6 +816,7 @@ int move(struct coordinates c, struct block blocks[9][13], bool must, int *n, in
 								case 0:
 									if(blocks[c.y][c.x].identifier==Jack && blocks[c.y][c.x].visible==0){
 										printf("Mr.Jack wins by escaping the city, try better next time detective :)\n");
+										getch();
 										exit(EXIT_SUCCESS);
 									}else{
 										printf("This character can't escape!\n");
@@ -817,6 +826,7 @@ int move(struct coordinates c, struct block blocks[9][13], bool must, int *n, in
 								default:
 									if(blocks[c.y][c.x].temp.identifier==Jack && blocks[c.y][c.x].temp.visible==0){
 										printf("Mr.Jack wins by escaping, try better next time detective :)\n");
+										getch();
 										exit(EXIT_SUCCESS);
 									}else{
 										printf("This character can't escape!\n");
@@ -832,9 +842,11 @@ int move(struct coordinates c, struct block blocks[9][13], bool must, int *n, in
 							if(choice){
 								if(blocks[next.y][next.x].identifier==Jack){
 									printf("Detective won! Jack was captured");
+									getch();
 									exit(EXIT_SUCCESS);
 								}else{
 									printf("Jack won! Detective captured a poor innocent!");
+									getch();
 									exit(EXIT_SUCCESS);
 								}
 							}
@@ -892,6 +904,7 @@ int move(struct coordinates c, struct block blocks[9][13], bool must, int *n, in
 								case 0:
 									if(blocks[c.y][c.x].identifier==Jack && blocks[c.y][c.x].visible==0){
 										printf("Mr.Jack wins by escaping the city, try better next time detective :)\n");
+										getch();
 										exit(EXIT_SUCCESS);
 									}else{
 										printf("This character can't escape!\n");
@@ -901,6 +914,7 @@ int move(struct coordinates c, struct block blocks[9][13], bool must, int *n, in
 								default:
 									if(blocks[c.y][c.x].temp.identifier==Jack && blocks[c.y][c.x].temp.visible==0){
 										printf("Mr.Jack wins by escaping, try better next time detective :)\n");
+										getch();
 										exit(EXIT_SUCCESS);
 									}else{
 										printf("This character can't escape!\n");
@@ -916,9 +930,11 @@ int move(struct coordinates c, struct block blocks[9][13], bool must, int *n, in
 							if(choice){
 								if(blocks[next.y][next.x].identifier==Jack){
 									printf("Detective won! Jack was captured");
+									getch();
 									exit(EXIT_SUCCESS);
 								}else{
 									printf("Jack won! Detective captured a poor innocent!");
+									getch();
 									exit(EXIT_SUCCESS);
 								}
 							}
@@ -976,6 +992,7 @@ int move(struct coordinates c, struct block blocks[9][13], bool must, int *n, in
 								case 0:
 									if(blocks[c.y][c.x].identifier==Jack && blocks[c.y][c.x].visible==0){
 										printf("Mr.Jack wins by escaping the city, try better next time detective :)\n");
+										getch();
 										exit(EXIT_SUCCESS);
 									}else{
 										printf("This character can't escape!\n");
@@ -985,6 +1002,7 @@ int move(struct coordinates c, struct block blocks[9][13], bool must, int *n, in
 								default:
 									if(blocks[c.y][c.x].temp.identifier==Jack && blocks[c.y][c.x].temp.visible==0){
 										printf("Mr.Jack wins by escaping, try better next time detective :)\n");
+										getch();
 										exit(EXIT_SUCCESS);
 									}else{
 										printf("This character can't escape!\n");
@@ -1000,9 +1018,11 @@ int move(struct coordinates c, struct block blocks[9][13], bool must, int *n, in
 							if(choice){
 								if(blocks[next.y][next.x].identifier==Jack){
 									printf("Detective won! Jack was captured");
+									getch();
 									exit(EXIT_SUCCESS);
 								}else{
 									printf("Jack won! Detective captured a poor innocent!");
+									getch();
 									exit(EXIT_SUCCESS);
 								}
 							}
@@ -1060,6 +1080,7 @@ int move(struct coordinates c, struct block blocks[9][13], bool must, int *n, in
 								case 0:
 									if(blocks[c.y][c.x].identifier==Jack && blocks[c.y][c.x].visible==0){
 										printf("Mr.Jack wins by escaping the city, try better next time detective :)\n");
+										getch();
 										exit(EXIT_SUCCESS);
 									}else{
 										printf("This character can't escape!\n");
@@ -1069,6 +1090,7 @@ int move(struct coordinates c, struct block blocks[9][13], bool must, int *n, in
 								default:
 									if(blocks[c.y][c.x].temp.identifier==Jack && blocks[c.y][c.x].temp.visible==0){
 										printf("Mr.Jack wins by escaping, try better next time detective :)\n");
+										getch();
 										exit(EXIT_SUCCESS);
 									}else{
 										printf("This character can't escape!\n");
@@ -1084,9 +1106,11 @@ int move(struct coordinates c, struct block blocks[9][13], bool must, int *n, in
 							if(choice){
 								if(blocks[next.y][next.x].identifier==Jack){
 									printf("Detective won! Jack was captured");
+									getch();
 									exit(EXIT_SUCCESS);
 								}else{
 									printf("Jack won! Detective captured a poor innocent!");
+									getch();
 									exit(EXIT_SUCCESS);
 								}
 							}
@@ -1150,9 +1174,11 @@ int move(struct coordinates c, struct block blocks[9][13], bool must, int *n, in
 								if(choice){
 									if(blocks[next.y][next.x].identifier==Jack){
 										printf("Detective won! Jack was captured");
+										getch();
 										exit(EXIT_SUCCESS);
 									}else{
 										printf("Jack won! Detective captured a poor innocent!");
+										getch();
 										exit(EXIT_SUCCESS);
 									}
 								}
@@ -1385,6 +1411,7 @@ void play(int character, struct block blocks[9][13], int *n, int *counter, int J
 			move_character(character, c, blocks, n, counter, Jack, detective);
 			printf("Ability: draw a card from the innocents' list:\n");
 			innocent_character=get(innocent_list, 0);
+			remove_node(&innocent_list, 0);
 			printf("non_playing player should look away here(press any key)\n");
 			getch();
 			print_character_name(innocent_character);

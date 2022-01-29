@@ -283,6 +283,7 @@ int main(){
 		if(i<4){
 			coo=find_numbered_light(i+1, blocks);
 			blocks[coo.y][coo.x].on=0;
+			blocks[coo.y][coo.x].num=0;
 		}
 		update_screen(blocks);
 		

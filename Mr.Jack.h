@@ -280,7 +280,7 @@ void print_street(struct block block){
 			printf("  ");
 		break;
 	}
-	if(block.sus)
+	if(block.sus && block.identifier<street)
 		printf("!");
 	else
 		printf(" ");
@@ -330,9 +330,9 @@ void print_map(struct block blocks[9][13]){
 			for(j=0; j<13; j++){
 			printf("%-7d", j+1);
 			}
-			printf("\n%cy        ", 25);
+			printf("\n%cy", 25);
 			for(j=0; j<6; j++){
-			printf("______        ");
+			printf("        ______");
 			}
 		}
 		printf("\n");
@@ -559,9 +559,8 @@ void swap_character_info(struct block *b1, struct block *b2){
 	return;
 }
 
-int print_available_moves(struct availability av, int x, int y, bool must, struct block blocks[9][13]){
+int print_available_directions(struct availability av, int x, int y, bool must, struct block blocks[9][13]){
 	int en=0;
-	printf("available moves: ");
 	if(blocks[y][x].well && blocks[y][x].blocked==0){
 		printf("0:Well   ");
 		en=1;
@@ -608,7 +607,8 @@ int move(struct coordinates c, struct block blocks[9][13], bool must, int *n, in
 	bool r = c.x % 2;
 	struct coordinates next;
 	struct character_info info;
-	en = print_available_moves(av, c.x, c.y, must, blocks);
+	printf("available moves: ");
+	en = print_available_directions(av, c.x, c.y, must, blocks);
 	if(en==-1){
 		printf("You ran out of moves and cannot remain on this block, these moves are not acceptable!\n");
 		return -1;
@@ -1217,7 +1217,7 @@ int move(struct coordinates c, struct block blocks[9][13], bool must, int *n, in
 						*n=0;
 						return 0;
 					}
-					else printf("You must make a move!\n");
+					else printf("Make a move!\n");
 			break;
 			default:
 				printf("invalid input!\n");
@@ -1225,7 +1225,7 @@ int move(struct coordinates c, struct block blocks[9][13], bool must, int *n, in
 		}
 	}
 	update_screen(blocks);
-	printf("moving character: ");
+	printf("moving/moved character: ");
 	print_character_name(character);
 	printf("\n");
 	return 1;
@@ -1278,6 +1278,105 @@ bool visible_by_person(int character, struct block blocks[9][13]){
 	if(c.y-r>=0 && c.x<12) visible+=(blocks[c.y-r][c.x+1].identifier<8);
 	if(c.y+!r<=9 && c.x<12) visible+=(blocks[c.y+!r][c.x+1].identifier<8);
 	return visible;
+}
+
+void update_visiblity_by_JW_sub_function(int direction, struct coordinates c, struct block blocks[9][13]){
+	struct coordinates next;
+	bool r = c.x % 2;
+	switch(direction){
+		case up:
+			next.x=c.x;
+			next.y=c.y - 1;
+			if(blocks[next.y][next.x].identifier>street){
+				return;
+			}else{
+				blocks[next.y][next.x].visible=1;
+				update_visiblity_by_JW_sub_function(up, next, blocks);	
+			}
+		break;
+		case up_right:
+			next.x=c.x + 1;
+			next.y=c.y - r;
+			if(blocks[next.y][next.x].identifier>street){
+				return;
+			}else{
+				blocks[next.y][next.x].visible=1;
+				update_visiblity_by_JW_sub_function(up_right, next, blocks);	
+			}
+		break;
+		case up_left:
+			next.x=c.x - 1;
+			next.y=c.y - r;
+			if(blocks[next.y][next.x].identifier>street){
+				return;
+			}else{
+				blocks[next.y][next.x].visible=1;
+				update_visiblity_by_JW_sub_function(up_left, next, blocks);	
+			}
+		break;
+		case down:
+			next.x=c.x;
+			next.y=c.y + 1;
+			if(blocks[next.y][next.x].identifier>street){
+				return;
+			}else{
+				blocks[next.y][next.x].visible=1;
+				update_visiblity_by_JW_sub_function(down, next, blocks);	
+			}
+		break;
+		case down_right:
+			next.x=c.x + 1;
+			next.y=c.y + !r;
+			if(blocks[next.y][next.x].identifier>street){
+				return;
+			}else{
+				blocks[next.y][next.x].visible=1;
+				update_visiblity_by_JW_sub_function(down_right, next, blocks);	
+			}
+		break;
+		case down_left:
+			next.x=c.x - 1;
+			next.y=c.y + !r;
+			if(blocks[next.y][next.x].identifier>street){
+				return;
+			}else{
+				blocks[next.y][next.x].visible=1;
+				update_visiblity_by_JW_sub_function(down_left, next, blocks);	
+			}
+		break;
+		default:
+			printf("bug in update_visiblity_by_JW_sub_function\n");
+		break; 
+	}
+	return;
+}
+
+void update_visiblity_by_JW(struct block blocks[9][13]){
+	struct coordinates c;
+	c=find_character(JW, blocks);
+	switch(blocks[c.y][c.x].direction){
+		case up:
+			update_visiblity_by_JW_sub_function(up, c, blocks);
+		break;
+		case up_right:
+			update_visiblity_by_JW_sub_function(up_right, c, blocks);
+		break;
+		case up_left:
+			update_visiblity_by_JW_sub_function(up_left, c, blocks);
+		break;
+		case down:
+			update_visiblity_by_JW_sub_function(down, c, blocks);
+		break;
+		case down_right:
+			update_visiblity_by_JW_sub_function(down_right, c, blocks);
+		break;
+		case down_left:
+			update_visiblity_by_JW_sub_function(down_left, c, blocks);
+		break;
+		default:
+			printf("bug in update_visiblity_by_JW\n");
+		break; 
+	}
 }
 
 void update_visibility(struct block blocks[9][13]){
@@ -1335,8 +1434,23 @@ void swap_block_abilities(int character, int x1, int y1, int x2, int y2, struct 
 	return;
 }
 
-void ability(int character, struct block blocks[9][13]){
-	int x1, y1, x2, y2, flag=1;
+int convert_name_to_identifier(char name[]){
+	int output=-1;
+	if(strcmpi("SH", name)==0) output=SH;
+	if(strcmpi("JW", name)==0) output=JW;
+	if(strcmpi("JS", name)==0) output=JS;
+	if(strcmpi("IL", name)==0) output=IL;
+	if(strcmpi("MS", name)==0) output=MS;
+	if(strcmpi("SG", name)==0) output=SG;
+	if(strcmpi("WG", name)==0) output=WG;
+	if(strcmpi("JB", name)==0) output=JB;
+	return output;
+}
+
+void ability(int character, struct block blocks[9][13], int Jack, int detective){
+	int x1, y1, x2, y2, flag=1, n=3, counter=0, choice;
+	struct coordinates c, c2;
+	char name[20];
 	while(flag)
 	switch(character){
 		case JS:
@@ -1370,13 +1484,14 @@ void ability(int character, struct block blocks[9][13]){
 				checker(1, 13, &x2);
 				checker(1, 9, &y2);
 				if(blocks[y2-1][x2-1].identifier==esc && blocks[y2-1][x2-1].blocked==0){
+					printf("exc\n");
 					swap_block_abilities(IL, x1-1, y1-1, x2-1, y2-1, blocks);
 					flag=0;
 				} else{
-					("Invalid input! try again\n");
+					printf("Invalid input2! try again\n");
 				}
 			} else {
-				printf("Invalid input! try again\n");
+				printf("Invalid input1! try again\n");
 			}
 		break;
 		case JB:
@@ -1399,10 +1514,113 @@ void ability(int character, struct block blocks[9][13]){
 				printf("Invalid input! try again\n");
 			}
 		break;
+		case SG:
+			while(n>0){
+				printf("Who do you want move? ");
+				scanf(" %s", name);
+				choice=convert_name_to_identifier(name);
+				if(choice==-1){
+					printf("Invalid input! try again\n");
+				}else if(choice==SG){
+					printf("You can't move SG himself with his ability!\n");
+				}else{
+					c=find_character(choice, blocks);
+					move(c, blocks, 1, &n, &counter, Jack, detective);
+				}
+			}
+			flag=0;
+		break;
+		case WG:
+			printf("Who do you want to swap with? ");
+			scanf(" %s", name);
+			choice=convert_name_to_identifier(name);
+			if(choice==-1){
+				printf("Invalid input! try again\n");
+			}else if(choice==WG){
+				printf("You can't swap WG with himself with his ability!\n");
+			}else{
+				c=find_character(WG, blocks);
+				c2=find_character(choice, blocks);
+				
+				struct character_info temp;
+				temp.identifier=blocks[c.y][c.x].identifier;
+				temp.direction=blocks[c.y][c.x].direction;
+				temp.sus=blocks[c.y][c.x].sus;
+				temp.visible=blocks[c.y][c.x].visible;
+				
+				blocks[c.y][c.x].identifier=blocks[c2.y][c2.x].identifier;
+				blocks[c.y][c.x].direction=blocks[c2.y][c2.x].direction;
+				blocks[c.y][c.x].sus=blocks[c2.y][c2.x].sus;
+				blocks[c.y][c.x].visible=blocks[c2.y][c2.x].visible;
+				
+				blocks[c2.y][c2.x].identifier=temp.identifier;
+				blocks[c2.y][c2.x].direction=temp.direction;
+				blocks[c2.y][c2.x].sus=temp.sus;
+				blocks[c2.y][c2.x].visible=temp.visible;
+				flag=0;
+			}
+		break;
+		default:
+			printf("Error in ability!\n");
+			flag=0;
+		break;
 	}
 	update_screen(blocks);
 	return;
 }
+
+void JW_ability(struct block blocks[9][13]){
+	int choice, flag;
+	struct coordinates c;
+	printf("%d: %c   ", up, 24);
+	printf("%d: %c   ", down, 25);
+	printf("%d: %c(   ", up_right, 24);
+	printf("%d: )%c   ", up_left, 24);
+	printf("%d: %c(   ", down_right, 25);
+	printf("%d: )%c   ", down_left, 25);
+	do{
+		scanf(" %d", &choice);
+		switch(choice){
+			case up:
+			c=find_character(JW, blocks);
+			blocks[c.y][c.x].direction=up;	
+			flag=0;
+			break;
+			case up_right:
+			c=find_character(JW, blocks);
+			blocks[c.y][c.x].direction=up_right;
+			flag=0;
+			break;
+			case up_left:
+			c=find_character(JW, blocks);
+			blocks[c.y][c.x].direction=up_left;
+			flag=0;
+			break;
+			case down:
+			c=find_character(JW, blocks);
+			blocks[c.y][c.x].direction=down;	
+			flag=0;
+			break;
+			case down_right:
+			c=find_character(JW, blocks);
+			blocks[c.y][c.x].direction=down_right;	
+			flag=0;
+			break;
+			case down_left:
+			c=find_character(JW, blocks);
+			blocks[c.y][c.x].direction=down_left;	
+			flag=0;
+			break;
+			default:
+				printf("Invalid input! try again:\n");
+				flag=1;
+			break;
+		}
+	} while(flag);
+	update_screen(blocks);
+	return;
+}
+
 void play(int character, struct block blocks[9][13], int *n, int *counter, int Jack, int detective, struct node * innocent_list){
 	struct coordinates c = find_character(character, blocks);
 	int innocent_character, choice;
@@ -1411,22 +1629,34 @@ void play(int character, struct block blocks[9][13], int *n, int *counter, int J
 			move_character(character, c, blocks, n, counter, Jack, detective);
 			printf("Ability: draw a card from the innocents' list:\n");
 			innocent_character=get(innocent_list, 0);
-			remove_node(&innocent_list, 0);
-			printf("non_playing player should look away here(press any key)\n");
-			getch();
-			print_character_name(innocent_character);
-			printf(" is innocent");
+			if(innocent_list!=NULL){
+				remove_node(&innocent_list, 0);
+				printf("non_playing player should look away here(press any key)\n");
+				getch();
+				print_character_name(innocent_character);
+				printf(" is innocent\n");
+				getch();
+			} else{
+				printf("The innocents have already all been deduced ny Sherlock!\n");
+				getch();
+			}
+			
+		break;
+		case JW:
+			move_character(character, c, blocks, n, counter, Jack, detective);
+			printf("Set the lantern's direction: ");
+			JW_ability(blocks);
 		break;
 		case JS:
 			printf("Do you want to use your ability 1.now 2.after movement ?\n");
 			scanf(" %d", &choice);
 			checker(1, 2, &choice);
 			if(choice==1){
-				ability(JS, blocks);
+				ability(JS, blocks, Jack, detective);
 				move_character(character, c, blocks, n, counter, Jack, detective);
 			}else{
 				move_character(character, c, blocks, n, counter, Jack, detective);
-				ability(JS, blocks);
+				ability(JS, blocks, Jack, detective);
 			}
 		break;
 		case IL:
@@ -1434,11 +1664,11 @@ void play(int character, struct block blocks[9][13], int *n, int *counter, int J
 			scanf(" %d", &choice);
 			checker(1, 2, &choice);
 			if(choice==1){
-				ability(IL, blocks);
+				ability(IL, blocks, Jack, detective);
 				move_character(character, c, blocks, n, counter, Jack, detective);
 			}else{
 				move_character(character, c, blocks, n, counter, Jack, detective);
-				ability(IL, blocks);
+				ability(IL, blocks, Jack, detective);
 			}
 		break;
 		case JB:
@@ -1446,16 +1676,42 @@ void play(int character, struct block blocks[9][13], int *n, int *counter, int J
 			scanf(" %d", &choice);
 			checker(1, 2, &choice);
 			if(choice==1){
-				ability(JB, blocks);
+				ability(JB, blocks, Jack, detective);
 				move_character(character, c, blocks, n, counter, Jack, detective);
 			}else{
 				move_character(character, c, blocks, n, counter, Jack, detective);
-				ability(JB, blocks);
+				ability(JB, blocks, Jack, detective);
 			}
 		break;
-		case JW:
-			
+		case SG:
+			printf("Do you want to use your ability 1.now 2.after movement ?\n");
+			scanf(" %d", &choice);
+			checker(1, 2, &choice);
+			if(choice==1){
+				ability(SG, blocks, Jack, detective);
+				move_character(character, c, blocks, n, counter, Jack, detective);
+			}else{
+				move_character(character, c, blocks, n, counter, Jack, detective);
+				ability(SG, blocks, Jack, detective);
+			}
+		break;
+		case MS:
+			move_character(character, c, blocks, n, counter, Jack, detective);
+		break;
+		case WG:
+			printf("Do you want to 1.use your ability 2.do your movement ?\n");
+			scanf(" %d", &choice);
+			checker(1, 2, &choice);
+			if(choice==1){
+				ability(WG, blocks, Jack, detective);
+			}else{
+				move_character(character, c, blocks, n, counter, Jack, detective);
+			}
+		break;
+		default:
+			printf("Error in play!\n");
 		break;
 	}
+	update_screen(blocks);
 	return;
 }

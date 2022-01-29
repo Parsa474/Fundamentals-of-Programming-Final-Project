@@ -539,7 +539,6 @@ void print_character_name(int identifier){
 }
 
 void swap_character_info(struct block *b1, struct block *b2){
-	
 	struct character_info temp;
 	
 	temp.identifier=b1->identifier;
@@ -971,7 +970,7 @@ int move(struct coordinates c, struct block blocks[9][13], bool must, int *n, in
 						*n=0;
 						return 0;
 					}
-					else printf("Make a move!\n");
+					else printf("You must at least make 1 move!\n");
 			break;
 			default:
 				printf("invalid input!\n");
@@ -1126,7 +1125,7 @@ void update_visiblity_by_JW(struct block blocks[9][13]){
 		break;
 		default:
 			printf("bug in update_visiblity_by_JW\n");
-		break; 
+		break;
 	}
 }
 
@@ -1373,23 +1372,34 @@ void JW_ability(struct block blocks[9][13]){
 	return;
 }
 
-void play(int character, struct block blocks[9][13], int *n, int *counter, int Jack, int detective, struct node * innocent_list){
+void save_log(struct block blocks[9][13], struct block logs[][9][13], int *logs_index){
+	int i, j;
+	for(i=0; i<9; i++){
+		for(j=0; j<13; j++){
+			logs[*logs_index][i][j]=blocks[i][j];
+		}
+	}
+	*logs_index+=1;
+}
+
+void play(int character, struct block blocks[9][13], int *n, int *counter, int Jack, int detective, struct node ** innocent_list, struct block logs[][9][13], int *logs_index){
 	struct coordinates c = find_character(character, blocks);
 	int innocent_character, choice;
 	switch(character){
 		case SH:
 			move_character(character, c, blocks, n, counter, Jack, detective);
 			printf("Ability: draw a card from the innocents' list:\n");
-			innocent_character=get(innocent_list, 0);
+			printf("non_playing player should look away here(press any key)\n");
+			getch();
 			if(innocent_list!=NULL){
-				remove_node(&innocent_list, 0);
-				printf("non_playing player should look away here(press any key)\n");
-				getch();
+				innocent_character=get(*innocent_list, 0);
+				remove_node(innocent_list, 0);
 				print_character_name(innocent_character);
 				printf(" is innocent\n");
 				getch();
+				update_screen(blocks);
 			} else{
-				printf("The innocents have already all been deduced ny Sherlock!\n");
+				printf("The innocents have already all been deduced by Sherlock!\n");
 				getch();
 			}
 			
@@ -1464,5 +1474,6 @@ void play(int character, struct block blocks[9][13], int *n, int *counter, int J
 			printf("Error in play!\n");
 		break;
 	}
+	save_log(blocks, logs, logs_index);
 	return;
 }

@@ -131,17 +131,7 @@ int main(){
 		break;
 	}
 	update_screen(blocks);
-	
-#if 0
-	printf("test the gameplay of a character: ");
-	printf("Who do you want to test? ");
-	n=3;
-	play(SG, blocks, &n, &counter, Jack, 0, &innocent_list);
-	update_visiblity_by_JW(blocks);
-	getch();
-	update_screen(blocks);
-#endif
-	
+		
 #if debug
 	printf("The innocent list: ");
 	for(i=0; i<innocent_list_index; i++){

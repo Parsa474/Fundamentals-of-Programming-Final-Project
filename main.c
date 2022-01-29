@@ -37,7 +37,7 @@ int main(){
 			blk.identifier=i;
 			blocks[coo.y][coo.x]=blk;
 		}
-	close(f);
+		close(f);
 	} else{
 		while(1){
 			system("cls");
@@ -48,14 +48,15 @@ int main(){
 			if(f==NULL) printf("could not open this file");
 			else{
 				fread(&initial, sizeof(int), 1, f);
-				fread(&Jack, sizeof(int), 1, f);
+				fread(&Jack, sizeof(int), 1, f);				
+				//fread(innocent_list, sizeof(struct node*), 1)
 				for(j=0; j<9; j++){
 					for(k=0; k<13; k++){
 						fread(&blocks[j][k], sizeof(struct block), 1, f);
 					}
 				}
-			close(f);
-			break;
+				close(f);
+				break;
 			}
 		}
 	}
@@ -81,6 +82,10 @@ int main(){
 	if(choice==1){
 		printf("Mr.Jack, draw your character card(press any key), Sir detective you must look away here\n");
 		getch();
+		linked_list_cpy(&innocent_list, list);
+		shuffle(innocent_list);
+		Jack = get(innocent_list, 0);
+		remove_node(&innocent_list, 0);
 		switch(Jack){
 			case SH:
 				printf("Mr.Jack is Sherlock Holmes(SH)\n");
@@ -112,25 +117,24 @@ int main(){
 		}
 		printf("Press any key to continue\n");
 		getch();
-		system("cls");
-		//linked_list_cpy(&innocent_list, list);
 	}
-	linked_list_cpy(&innocent_list, list);
-	Jack = get(innocent_list, 0);
-	remove_node(&innocent_list, 0);
-	/*int dbug=0;		//test the gameplay of a character
+	int dbug=0;		//test the gameplay of a character
 	if(dbug){
 		n=3;
-		play(JW, blocks, &n, &counter, Jack, 0, innocent_list);
+		play(SG, blocks, &n, &counter, Jack, 0, innocent_list);
 		update_visiblity_by_JW(blocks);
 		getch();
 		update_screen(blocks);
 		if(innocent_list!=NULL) free(innocent_list);
 		free(list);
 		return 0;
-	}*/
+	}
+	if(1){
+		print_list(innocent_list);
+	}
 	system("cls");
 	for(i=initial; i<8 && flag; i++){
+		system("cls");
 		printf("Round %d starts!\n", i+1);
 		print_map(blocks);
 		if(i%2==0){
@@ -155,12 +159,9 @@ int main(){
 			scanf(" %d", &choice);
 			checker(1, 4, &choice);
 			character = get(sub_deck1, choice-1);
+			remove_node(&sub_deck1, choice-1);
 			n=3;
 			if(character==MS) n++;
-			printf("You chose: ");
-			print_character_name(character);
-			remove_node(&sub_deck1, choice-1);
-			printf("\n");
 			coo=find_character(character, blocks);
 			play(character, blocks, &n, &counter, Jack, 1, innocent_list);
 			for(k=0; k<2; k++){
@@ -172,22 +173,19 @@ int main(){
 				scanf(" %d", &choice);
 				checker(1, 3-k, &choice);
 				character = get(sub_deck1, choice-1);
+				remove_node(&sub_deck1, choice-1);
 				n=3;
 				if(character==MS) n++;
-				printf("You chose: ");
-				print_character_name(character);
-				remove_node(&sub_deck1, choice-1);
-				printf("\n");
 				coo=find_character(character, blocks);
-				play(character, blocks, &n, &counter, Jack, 1, innocent_list);
+				play(character, blocks, &n, &counter, Jack, 0, innocent_list);
 			}
 			printf("Detective's turn: play with the last card: ");
 			character = get(sub_deck1, 0);
+			remove_node(&sub_deck1, 0);
+			print_character_name(character);
+			printf("\n");
 			n=3;
 			if(character==MS) n++;
-			print_character_name(character);
-			remove_node(&sub_deck1, 0);
-			printf("\n");
 			coo=find_character(character, blocks);
 			play(character, blocks, &n, &counter, Jack, 1, innocent_list);
 		}else{
@@ -204,14 +202,11 @@ int main(){
 			scanf(" %d", &choice);
 			checker(1, 4, &choice);
 			character = get(sub_deck2, choice-1);
+			remove_node(&sub_deck2, choice-1);
 			n=3;
 			if(character==MS) n++;
-			printf("You chose: ");
-			print_character_name(character);
-			remove_node(&sub_deck2, choice-1);
-			printf("\n");
 			coo=find_character(character, blocks);
-			play(character, blocks, &n, &counter, Jack, 1, innocent_list);
+			play(character, blocks, &n, &counter, Jack, 0, innocent_list);
 			for(k=0; k<2; k++){
 				printf("Detective's turn: which character do you want to play?(enter the number amongst the remaining cards from 1 to %d)\n", 3-k);
 				for(j=0; j<3-k; j++){
@@ -221,24 +216,21 @@ int main(){
 				scanf(" %d", &choice);
 				checker(1, 3-k, &choice);
 				character = get(sub_deck2, choice-1);
+				remove_node(&sub_deck2, choice-1);
 				n=3;
 				if(character==MS) n++;
-				printf("You chose: ");
-				print_character_name(character);
-				remove_node(&sub_deck2, choice-1);
-				printf("\n");
 				coo=find_character(character, blocks);
 				play(character, blocks, &n, &counter, Jack, 1, innocent_list);
 			}
 			printf("Jack's turn: play with the last card: ");
 			character = get(sub_deck2, 0);
+			remove_node(&sub_deck2, 0);
 			n=3;
 			if(character==MS) n++;
 			print_character_name(character);
-			remove_node(&sub_deck2, 0);
 			printf("\n");
 			coo=find_character(character, blocks);
-			play(character, blocks, &n, &counter, Jack, 1, innocent_list);
+			play(character, blocks, &n, &counter, Jack, 0, innocent_list);
 		}
 		update_visiblity_by_JW(blocks);
 		update_visibility(blocks);

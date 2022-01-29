@@ -328,7 +328,7 @@ int main(){
 		}
 	}
 	printf("Time is up! Mr.Jack wins\n");
-	
+	getch();
 	//to replay the game from the end:
 	printf("Do you want to see the replay of the game? 0.no 1.yes");
 	scanf(" %d", &choice);
@@ -343,8 +343,6 @@ int main(){
 			getch();
 		}
 	}
-	
 	free(list);
-	getch();
 	return 0;
 }
